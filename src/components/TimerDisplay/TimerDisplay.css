@@ -1,0 +1,28 @@
+.session_time {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.session_time_inner {
+  display: flex;
+  padding: 30px;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  border: 3px solid rgb(22, 123, 182);
+  border-radius: 50px;
+  margin: 20px;
+  width: 200px;
+  max-width: 90vw;
+}
+
+.session_time h3 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.session_time span {
+  font-size: 3rem;
+  font-style: italic;
+}
