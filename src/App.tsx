@@ -21,21 +21,22 @@ function App(): JSX.Element {
   }, [sessionLength]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
+    let interval: number | null = null;
 
     const updateTimer = () => {
       setTimer((prevTimer) => prevTimer - 1);
     };
 
     if (playOrPause) {
-      interval = setInterval(updateTimer, 1000);
+      interval = window.setInterval(updateTimer, 1000);
     }
 
     return () => {
-      if (interval) clearInterval(interval);
+      if (interval !== null) {
+        clearInterval(interval);
+      }
     };
   }, [playOrPause]);
-
   useEffect(() => {
     if (timer === 0) {
       setIsSession(!isSession);
