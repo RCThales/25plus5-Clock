@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import beep from "/beep.ogg";
 import "./App.css";
 import { BreakLengthControl } from "./components/BreakLengthControl/BreakLengthControl";
 import { SessionLengthControl } from "./components/SessionLengthControl/SessionLengthControl";
@@ -12,7 +11,29 @@ function App(): JSX.Element {
   const [sessionLength, setSessionLength] = useState<number>(25);
   const [timer, setTimer] = useState<number>(sessionLength * 60);
   const [isSession, setIsSession] = useState<boolean>(true);
+
   const beepAudio = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    if (!playOrPause) return;
+
+    const timerCallback = () => {
+      setTimer((timerBeforeUpdate) => {
+        if (timerBeforeUpdate === 0) {
+          switchSession();
+          return initialTime();
+        }
+        return timerBeforeUpdate - 1;
+      });
+    };
+
+    const interval = window.setInterval(timerCallback, 1000);
+
+    return () => clearInterval(interval);
+  }, [playOrPause, isSession, breakLength, sessionLength]);
+
+  const switchSession = () => setIsSession(!isSession);
+  const initialTime = () => (isSession ? breakLength : sessionLength) * 60;
 
   useEffect(() => {
     if (!playOrPause && isSession) {
@@ -21,29 +42,13 @@ function App(): JSX.Element {
   }, [sessionLength]);
 
   useEffect(() => {
-    let interval: number | null = null;
-
-    const updateTimer = () => {
-      setTimer((prevTimer) => prevTimer - 1);
-    };
-
-    if (playOrPause) {
-      interval = window.setInterval(updateTimer, 1000);
-    }
-
-    return () => {
-      if (interval !== null) {
-        clearInterval(interval);
+    const playBeepWhenTimerHitsZero = () => {
+      if (timer === 0) {
+        playBeep();
       }
     };
-  }, [playOrPause]);
-  useEffect(() => {
-    if (timer === 0) {
-      setIsSession(!isSession);
-      setTimer((isSession ? breakLength : sessionLength) * 60);
-      beepAudio.current?.play();
-    }
-  }, [timer, isSession, sessionLength, breakLength]);
+    playBeepWhenTimerHitsZero();
+  }, [timer]);
 
   const togglePlayOrPause = (): void => {
     setPlayOrPause(!playOrPause);
@@ -55,7 +60,14 @@ function App(): JSX.Element {
     setSessionLength(25);
     setTimer(25 * 60);
     setIsSession(true);
+    pauseBeep();
+  };
 
+  const playBeep = () => {
+    beepAudio.current?.play();
+  };
+
+  const pauseBeep = () => {
     if (beepAudio.current) {
       beepAudio.current.pause();
       beepAudio.current.currentTime = 0;
@@ -88,7 +100,7 @@ function App(): JSX.Element {
 
   return (
     <>
-      <audio id="beep" ref={beepAudio} src={beep} preload="auto" />
+      <audio id="beep" ref={beepAudio} src="/beep.ogg" preload="auto"></audio>
       <h1>25plus5 Clock</h1>
       <div className="options_wrapper">
         <BreakLengthControl
@@ -102,15 +114,18 @@ function App(): JSX.Element {
           onDecrement={decrementSession}
         />
       </div>
+
       <TimerDisplay
         label={isSession ? "Session" : "Break"}
         time={formatTime(timer)}
       />
+
       <PlayPauseResetControls
         isPlaying={playOrPause}
         onPlayPause={togglePlayOrPause}
         onReset={resetTimer}
       />
+
       <footer>
         <p>Coded by Thales Cardoso</p>
       </footer>
